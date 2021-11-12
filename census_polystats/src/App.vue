@@ -68,24 +68,24 @@
 
           <v-tab
            
-            :key="Analysis"
+            :key="analysis"
             
           >
-            {{ "Analysis" }}
+            {{ "analysis" }}
           </v-tab>
           <v-tab
             v-show="showResultsTab"
-            :key="Results"
+            :key="results"
             
           >
-            {{ "Results" }}
+            {{ "results" }}
           </v-tab>
     </v-tabs>
   
   <v-tabs-items v-model="tab">
       <v-tab-item :key="analysis">
         <v-row>
-          <v-col cols="8">
+          <v-col cols="6">
             <v-sheet rounded="lg">
               <v-form
                 ref="form"
@@ -135,48 +135,9 @@
                    
                   </v-list-item-content>
                 </v-list-item>
-                <v-divider class="my-2"></v-divider>
-                <v-list-item
-                  link
-                  color="grey lighten-4"
-                >
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      Select Census Group
-                    </v-list-item-title>
-                   
-                      <v-select
-                        v-model="selectedCensusGroup"
-                        :items="censusGroups"
-                        label="Census Groups"
-                        @change="onChangeGroup($event)"
-                        outlined
-                        :rules="rules"
-                        required
-                      ></v-select>
-                   
-                  </v-list-item-content>
-                </v-list-item>
-                <v-list-item
-                  link
-                  color="grey lighten-4"
-                >
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      Select Census Attribute
-                    </v-list-item-title>
-                   
-                      <v-select
-                        v-model="selectedCensusAttribute"
-                        :items="censusAttributes"
-                        label="Census Attribute"
-                        :rules="rules"
-                        outlined
-                        required
-                      ></v-select>
-                   
-                  </v-list-item-content>
-                </v-list-item>
+                
+               
+               
 
                 <v-divider class="my-2"></v-divider>
 
@@ -212,12 +173,12 @@
             </v-sheet>
           </v-col>
 
-          <v-col cols = "4">
+          <v-col cols = "6">
             <v-sheet
               min-height="70vh"
               rounded="lg"
             >
-              <LeafletMap :name="geojson" :resultsData="resultsData" :selectedAttribute="selectedAttribute"
+              <LeafletMap :name="geojson" :selectedAttribute="selectedAttribute"
               > </LeafletMap> 
                
             </v-sheet>
@@ -226,7 +187,9 @@
         </v-row>
          </v-tab-item>
           <v-tab-item :key="results">
-               <v-col cols="2" v-if= "showResults">
+               <v-col cols="8" v-if= "showResults">
+                 <LeafletMapResults :name="geojson" :resultsData="resultsData" :selectedAttribute="selectedAttribute"
+              > </LeafletMapResults> 
                <v-card
               
               max-width="344"
@@ -274,11 +237,13 @@
   import axios from 'axios';
   import shp from 'shpjs';
   import LeafletMap from './components/LeafletMap';
+  import LeafletMapResults from './components/LeafletMapResults';
   import * as turf from '@turf/turf'
   export default {
     name: 'app',
     components: {
-    LeafletMap
+    LeafletMap,
+    LeafletMapResults
     },
     data: () => ({
       rules: [
@@ -314,85 +279,16 @@
         ],
       analysis:"analysis",
       results:"results",
-      showResultsTab:false,
+      showResultsTab:true,
       valid: false,
       snackbar: false,
       text: 'Required inputs missing.',
       timeout: 2000,
     }),
   mounted(){
-      this.populateCensusDropdowns()
+      //this.populateCensusDropdowns()
   },
   methods:{
-    onChangeGroup() {
-            //console.log(event.target.value)
-            axios.get(this.groupLookup[this.selectedCensusGroup])
-              .then((res) => {
-               let variableIDLookupAll = {}
-               let variableLabels = []
-               Object.entries(res.data.variables).forEach((element) => { 
-                if (element[0].endsWith("E") && ! element[0].endsWith("PE")){
-                  variableLabels.push(element[1].label)
-                  variableIDLookupAll[element[1].label] = element[0]
-                }
-                } )
-                this.censusAttributes = variableLabels.sort()
-                this.selectedCensusAttribute = variableLabels[0]
-                
-                this.variableIDLookup = variableIDLookupAll
-                
-              })
-              .catch((error) => {
-                // eslint-disable-next-line
-                console.error(error);
-              });
-     },
-    populateCensusDropdowns(){
-      //const censusGroupPath = 'https://api.census.gov/data/2019/acs/acs5/groups.json';
-      const censusGroupPath = 'https://api.census.gov/data/2019/acs/acs5/profile/groups.json';
-      axios.get(censusGroupPath)
-        .then((res) => {
-         
-          let allCensusGroupVariables = []
-          let allgroupLookup = {}
-          res.data.groups.forEach((element) => { 
-                allCensusGroupVariables.push(element.description)
-                allgroupLookup[element.description] = element.variables
-          } )
-          this.censusGroups =  allCensusGroupVariables
-          this.selectedCensusGroup = allCensusGroupVariables[0]
-          this.groupLookup = allgroupLookup
-          
-
-          axios.get(this.groupLookup[this.selectedCensusGroup])
-              .then((res) => {
-              
-               let variableIDLookupAll = {}
-               let variableLabels = []
-               Object.entries(res.data.variables).forEach((element) => { 
-                if (element[0].endsWith("E") && ! element[0].endsWith("PE")){
-                  variableLabels.push(element[1].label)
-                  variableIDLookupAll[element[1].label] = element[0]
-                }
-                } )
-                this.censusAttributes = variableLabels.sort()
-                this.selectedCensusAttribute = variableLabels[0]
-                
-                this.variableIDLookup = variableIDLookupAll
-                
-              })
-              .catch((error) => {
-                // eslint-disable-next-line
-                console.error(error);
-              });
-          
-        })
-        .catch((error) => {
-          // eslint-disable-next-line
-          console.error(error);
-        });
-       
-    },
     onAddFiles() {
       //for the shapefiles in the files folder called pandr.shp
       
@@ -430,43 +326,6 @@
        this.attributes = Object.keys(this.geojson.features[0].properties)
        this.selectedAttribute = this.attributes[0]
     }, 
-   /* getMessage() {
-      const path = 'http://localhost:5000/ping';
-      axios.get(path)
-        .then((res) => {
-          this.msg = res.data;
-          
-        })
-        .catch((error) => {
-          // eslint-disable-next-line
-          console.error(error);
-        });
-    },
-    getTigerPolygons() {
-      //let bbox = turf.bbox(this.geojson);
-   
-      const tigerPath = 'https://tigerweb.geo.census.gov/arcgis/rest/services/Generalized_ACS2019/Tracts_Blocks/MapServer/3/query?where=&text=&objectIds=&time=&geometry=-123.17382500000001%2C+37.639829999999996%2C+-122.28178%2C+37.929823999999996&geometryType=esriGeometryEnvelope&inSR=4269&spatialRel=esriSpatialRelIntersects&distance=&units=esriSRUnit_Foot&relationParam=&outFields=&returnGeometry=true&returnTrueCurves=false&maxAllowableOffset=&geometryPrecision=&outSR=&havingClause=&returnIdsOnly=false&returnCountOnly=false&orderByFields=&groupByFieldsForStatistics=&outStatistics=&returnZ=false&returnM=false&gdbVersion=&historicMoment=&returnDistinctValues=false&resultOffset=&resultRecordCount=&returnExtentOnly=false&datumTransformation=&parameterValues=&rangeValues=&quantizationParameters=&featureEncoding=esriDefault&f=geojson';
-      axios.get(tigerPath)
-        .then((res) => {
-         
-          this.tigerPolygons = res.data;
-          this.calculatePercentOverlay()
-          
-        })
-        .catch((error) => {
-          // eslint-disable-next-line
-          console.error(error);
-        });
-      
-      //const response = await fetch("https://tigerweb.geo.census.gov/arcgis/rest/services/Generalized_ACS2019/Tracts_Blocks/MapServer/3/query");
-      //this.tigerPolygons = await response.json();
-      //console.log(this.tigerPolygons)
-    },
-    getACSVariable(){
-      //const response = await fetch("https://api.census.gov/data/2019/acs/acs5/variables.json");
-      //let data = await response.json();
-      //let censusVariable = data["variables"]["B01001A_001E"]
-    },*/
 
     runSummary(){
 
@@ -477,19 +336,17 @@
       //this.tab = 1
       //this.getTigerPolygons()
       let bbox = turf.bbox(this.geojson);
-      this.selectedCensusAttribute
       
-      let singleCensusVariable = this.variableIDLookup[this.selectedCensusAttribute]
       const path = 'http://localhost:5000/basicAnalysis';
-      let payload = {'census_variables':[singleCensusVariable], "layer": this.geojson, "bbox":bbox, "summary_attribute": this.selectedAttribute}
+      let payload = {"layer": this.geojson, "bbox":bbox, "summary_attribute": this.selectedAttribute}
       console.log(payload)
       axios.post(path, payload)
         .then((res) => {
-        
+           this.tab = 1
+           this.showResultsTab =true
            this.resultsData = res.data.data
            this.loading = false
-           this.showResultsTab =true
-           this.tab = 1
+           
 
         })
         .catch((error) => {

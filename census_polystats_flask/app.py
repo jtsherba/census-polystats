@@ -33,7 +33,7 @@ def process_request():
 
 def run_basic_anlysis(post_data):
     # get data from front-end
-    attribute_ids = post_data["census_variables"]
+    #attribute_ids = post_data["census_variables"]
     layer = post_data["layer"]
     layer_df = geopandas.GeoDataFrame.from_features(layer["features"])
     layer_df = layer_df.set_crs(4326, allow_override=True)
@@ -47,9 +47,17 @@ def run_basic_anlysis(post_data):
     state_code = "06"
     county_code = "075"
 
+    attribute_lookup_df = pd.read_csv('./attribute_lookup.csv')
+    attribute_ids_extracted = attribute_lookup_df['attribute_id'].tolist()
+    attribute_ids = []
+    for attribute_id in attribute_ids_extracted:
+        attribute_ids.extend(attribute_id.split(", "))
+    attribute_ids = list(set([x+"E" for x in attribute_ids]))
+
+  
     # get census data
     df = build_census_df(attribute_ids, tract_code, state_code, county_code)
-   
+ 
     # get tiger data
     tiger_df = make_tiger_api_call(bbox)
     tiger_df= tiger_df.to_crs({'init': 'epsg:3857'})
@@ -58,14 +66,17 @@ def run_basic_anlysis(post_data):
     percent_overlay_df = percent_overlay(tiger_df, layer_df)
     percent_overlay_dict = prep_percent_overlay(percent_overlay_df, layer_id)
 
-    all_calc_data = calc_basic_census_data(df, percent_overlay_dict, attribute_ids[0])
-    
+    all_calc_data = calc_socio_economic_data(df, percent_overlay_dict)
+    #df_all_calcs = pd.DataFrame.from_dict(all_calc_data).reset_index()
+    #df_all_calcs.rename(columns = {'index':'Attribute'}, inplace = True) 
+
+    #df_all_calcs.to_csv(r"./out.csv")
     return all_calc_data
 
 # function builds the api URL from tract_code, state_code, county_code, and attribute ids. 
 def build_census_url(tract_code, state_code, county_code, attribute_ids):
     attributes = ','.join(attribute_ids)
-    census_url = r'https://api.census.gov/data/2019/acs/acs5/profile?get={}&in=state:{}&in=county:{}&for=tract:{}'\
+    census_url = r'https://api.census.gov/data/2019/acs/acs5?get={}&in=state:{}&in=county:{}&for=tract:{}'\
                 .format(attributes, state_code, county_code, tract_code)
     return census_url
 
