@@ -4,8 +4,9 @@
       app
       color="white"
       flat
+      
     >
-      <v-container class="py-0 fill-height">
+       <v-container class="py-0 fill-height">
         <v-avatar
           class="mr-10"
           color="grey darken-1"
@@ -19,42 +20,17 @@
         >
           {{ link }}
         </v-btn>
+        
 
         <v-spacer></v-spacer>
         
         
       </v-container>
-    </v-app-bar>
-
-
-
-    <v-main class="grey lighten-3">
-      <v-container>
-         <v-snackbar
-                v-model="snackbar"
-                :timeout="timeout"
-                absolute
-                bottom
-                color="primary"
-                left
-                text
-              >
-                {{ text }}
-
-                <template v-slot:action="{ attrs }">
-                  <v-btn
-                    color="blue"
-                    text
-                    v-bind="attrs"
-                    @click="snackbar = false"
-                  >
-                    Close
-                  </v-btn>
-                </template>
-              </v-snackbar>
-        <v-tabs
+      <v-spacer></v-spacer>
+       <v-tabs
           v-model="tab"
-          align-with-title
+          
+           right
         >
           <v-tabs-slider color="yellow"></v-tabs-slider>
 
@@ -81,66 +57,144 @@
             {{ "results" }}
           </v-tab>
     </v-tabs>
-  
-  <v-tabs-items v-model="tab">
+    </v-app-bar>
+      <v-card
+    color="grey lighten-4"
+    flat
+    height="50px"
+    tile
+    class="toolBarCard"
+  >
+    <v-toolbar color="grey lighten-4">
+      
+
+      <v-toolbar-title>Title</v-toolbar-title>
+
+     
+
+
+      <v-spacer></v-spacer>
+
+      <v-btn icon>
+        <v-icon>mdi-magnify</v-icon>
+      </v-btn>
+
+      <v-btn icon>
+        <v-icon>mdi-heart</v-icon>
+      </v-btn>
+
+      <v-btn icon>
+        <v-icon>mdi-dots-vertical</v-icon>
+      </v-btn>
+    </v-toolbar>
+  </v-card>
+
+
+    <v-main class="grey lighten-3">
+     
+         <v-snackbar
+                v-model="snackbar"
+                :timeout="timeout"
+                absolute
+                bottom
+                color="primary"
+                left
+                text
+              >
+                {{ text }}
+
+                <template v-slot:action="{ attrs }">
+                  <v-btn
+                    color="blue"
+                    text
+                    v-bind="attrs"
+                    @click="snackbar = false"
+                  >
+                    Close
+                  </v-btn>
+                </template>
+              </v-snackbar>
+       
+
+  <v-tabs-items v-model="tab" class="v-tab-item-class">
       <v-tab-item :key="analysis">
-        <v-row>
-          <v-col cols="6">
-            <v-sheet rounded="lg">
+        <v-row height="100%">
+         <!-- <v-col cols="6">
+           
+          </v-col>-->
+
+          <v-col cols = "12" height="100%">
+            <v-sheet
+              min-height="70vh"
+              rounded="lg"
+              height="100%"
+            >
+              <div class="overlay">
+                       <v-sheet rounded="lg">
               <v-form
                 ref="form"
                 v-model="valid"
                 lazy-validation
               >
-              <v-list color="transparent">
-                <v-list-item
-                  link
-                  color="grey lighten-4"
-                >
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      Add a boundary shapefile
-                    </v-list-item-title>
-                      <v-file-input
+             
+                  <v-card
+                    outline
+                    class="toolInset"
+                  >
+                    <v-card-title class="text-h8">
+                      Load Boundary File
+                    </v-card-title>
+
+                    <!--<v-card-subtitle>Listen to your favorite artists and albums whenever and wherever, online and offline.</v-card-subtitle>-->
+                    <div class="spatialFileInput">
+                   
+                      <v-row>
+                        <v-col cols = "12">
+                       <v-file-input
                       show-size
                       :rules="rulesUpload"
                       accept=".zip,.geojson"
-                      placeholder="Pick an zipped shapefile"
+                      placeholder="Pick an zipped shapefile or GeoJSON File"
                       prepend-icon="mdi-map"
-                      label="Shapefile"
+                      label="GeoJSON or SHP"
                       v-model="chosenFile"
                       @change="onAddFiles"
                       required
+                      dense
                     ></v-file-input>
-                  </v-list-item-content>
-                </v-list-item>
-
-                 <v-list-item
-                  link
-                  color="grey lighten-4"
-                >
-                  <v-list-item-content>
-                    <v-list-item-title>
-                      Select summary attribute
-                    </v-list-item-title>
-                   
-                      <v-select
+                        </v-col>
+                        </v-row>
+                        <v-row>
+                        <v-col cols = "12">
+                    <v-select
                         v-model="selectedAttribute"
                         :items="attributes"
                         label="Summary Attribute"
                         outlined
                         :rules="rules"
                         required
+                        dense
                       ></v-select>
+                       </v-col>
+                      </v-row>
                    
-                  </v-list-item-content>
-                </v-list-item>
+                  </div>
+                          
+                    <v-card-title class="text-h8">
+                      Draw Boundary
+                    </v-card-title>
+            
+               
+                
+                  </v-card>  
+                   
+                 
                 
                
                
 
                 <v-divider class="my-2"></v-divider>
-
+                  <v-list color="transparent">
                 <v-list-item
                   link
                   color="grey lighten-4"
@@ -171,64 +225,84 @@
               </v-list>
               </v-form>
             </v-sheet>
-          </v-col>
-
-          <v-col cols = "6">
-            <v-sheet
-              min-height="70vh"
-              rounded="lg"
-            >
+              </div>
               <LeafletMap :name="geojson" :selectedAttribute="selectedAttribute"
               > </LeafletMap> 
-               
+             
             </v-sheet>
           </v-col>
          
         </v-row>
          </v-tab-item>
           <v-tab-item :key="results">
-               <v-col cols="8" v-if= "showResults">
-                 <LeafletMapResults :name="geojson" :resultsData="resultsData" :selectedAttribute="selectedAttribute"
-              > </LeafletMapResults> 
-               <v-card
-              
-              max-width="344"
-              outlined
-            >
-              <v-list-item three-line>
-                <v-list-item-content>
-                  <div class="text-overline mb-4">
-                    OVERLINE
-                  </div>
-                  <v-list-item-title class="text-h5 mb-1">
-                    Headline 5
-                  </v-list-item-title>
-                  <v-list-item-subtitle>Greyhound divisely hello coldly fonwderfully</v-list-item-subtitle>
-                </v-list-item-content>
-
-                <v-list-item-avatar
-                  tile
-                  size="80"
-                  color="grey"
-                ></v-list-item-avatar>
-              </v-list-item>
-
-              <v-card-actions>
-                <v-btn
-                  outlined
-                  rounded
-                  text
+              <v-dialog
+                  v-model="dialog"
+                  width="500"
                 >
-                  Button
-                </v-btn>
-              </v-card-actions>
-             
-            </v-card>
-          </v-col>
+                  <v-container style="height: 400px;background-color:white">
+                  <v-row
+                    class="fill-height"
+                    align-content="center"
+                    justify="center"
+                  >
+                    <v-col
+                      class="text-subtitle-1 text-center"
+                      cols="12"
+                    >
+                      Please wait while we prepare census data. This may take several minutes.
+                    </v-col>
+                    <v-col cols="6">
+                      <v-progress-linear
+                        color="deep-purple accent-4"
+                        indeterminate
+                        rounded
+                        height="6"
+                      ></v-progress-linear>
+                    </v-col>
+                  </v-row>
+                </v-container>
+              </v-dialog>
+              <v-row>
+               <v-col cols="8" v-if= "showResults">
+                 <LeafletMapResults :resultsData="resultsData" :selectedAttribute="selectedAttribute" :selectedCensusVariable="selectedCensusVariable"> </LeafletMapResults> 
+
+              </v-col>
+              <v-col cols="4" >
+                   <v-list-item
+                  link
+                  color="grey lighten-4"
+                >
+                  <v-list-item-content>
+                    <v-list-item-title>
+                      Census Variable
+                    </v-list-item-title>
+                   
+                      <v-select
+                        v-model="selectedCensusVariable"
+                        :items="censusVariables"
+                        label="Census Variables"
+                     
+                        outlined
+                       
+                        required
+                      ></v-select>
+                   
+                  </v-list-item-content>
+                </v-list-item>
+              </v-col>
+              </v-row>
+              <v-row>
+                <v-data-table
+                  :headers="tableHeaders"
+                  :items="tableValues"
+                  :items-per-page="5"
+                  class="elevation-1"
+                ></v-data-table>
+              </v-row>
           </v-tab-item> 
         </v-tabs-items>
         
-      </v-container>
+     
     </v-main>
   </v-app>
 </template>
@@ -258,6 +332,7 @@
         'Updates',
       ],
       geojson:null,
+      geojsonResults:null,
       chosenFile: null,
       msg:null,
       tigerPolygons:null,
@@ -284,6 +359,11 @@
       snackbar: false,
       text: 'Required inputs missing.',
       timeout: 2000,
+      dialog:false,
+      selectedCensusVariable: null, 
+      censusVariables: [],
+      tableHeaders: [],
+      tableValues: []
     }),
   mounted(){
       //this.populateCensusDropdowns()
@@ -333,8 +413,10 @@
       if (this.$refs.form.validate() === true){
         console.log(this.valid)
       this.loading = true
-      //this.tab = 1
-      //this.getTigerPolygons()
+      this.dialog = true
+      this.tab = 1
+           this.showResultsTab =true
+           this.geojsonResults = this.geojson
       let bbox = turf.bbox(this.geojson);
       
       const path = 'http://localhost:5000/basicAnalysis';
@@ -342,10 +424,42 @@
       console.log(payload)
       axios.post(path, payload)
         .then((res) => {
-           this.tab = 1
-           this.showResultsTab =true
-           this.resultsData = res.data.data
+           //this.tab = 1
+           //this.showResultsTab =true
+           this.geojsonResults = this.geojson
+           let resultsData = res.data.data
+           this.resultsData = [resultsData,this.geojson, this.selectedAttribute]
+           this.censusVariables = Object.keys(resultsData[Object.keys(resultsData)[0]])
+           this.selectedCensusVariable = this.censusVariables[0]
            this.loading = false
+           this.dialog = false
+             this.tableHeaders =  [
+          {
+            text: 'Census Variable Name',
+            align: 'start',
+            sortable: false,
+            value: 'name',
+          },
+           { text: 'Census Variable Category', value: 'category' },
+          { text: 'Census Value', value: 'value' },
+          { text: 'Summary Attribute', value: 'summary_attribute' },
+          
+           ]
+
+            for (const [key, value] of Object.entries(resultsData)) {
+              for (const [subkey, subvalue] of Object.entries(value)) {
+                  let tableValue = {
+                    name: subkey,
+                    category:"None",
+                    value: subvalue,
+                    summary_attribute:key
+                  }
+                  this.tableValues.push(tableValue)
+              }
+            }
+          
+      
+           console.log(resultsData)
            
 
         })
@@ -363,3 +477,32 @@
        }
     }
 </script>
+<style>
+.overlay {
+  height: 100px;
+  width: 400px;
+  margin-right: -500px;
+  padding-left:10px;
+  padding-top:10px;
+  position: relative;
+  float: left;
+  z-index: 2;
+  pointer-events: auto;
+
+}
+.spatialFileInput{
+  padding-left:15px;
+  padding-right:15px;
+}
+.v-tab-item-class{
+  height: 100%;
+}
+.toolBarCard{
+  padding-top:50px;
+}
+
+.toolInset{
+  margin:10px;
+  top:10px;
+}
+</style>

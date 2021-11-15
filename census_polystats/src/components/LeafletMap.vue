@@ -5,8 +5,12 @@
       <span v-if="loading">Loading...</span>
       
     </div>
+
    <div id="mapContainer"></div>
+    
+
   </div>
+  
 </template>
 
 <script>
@@ -190,14 +194,20 @@ export default {
   },
   methods: {
    setupLeafletMap: function () {
-     this.map = L.map("mapContainer").fitBounds(this.bounds)//.setView([51.505, -0.09], 13);
+     this.map = L.map("mapContainer", { zoomControl: false }).fitBounds(this.bounds)//.setView([51.505, -0.09], 13);
      //const mapDiv = L.map("mapContainer").setView(this.center, 13);
       L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
         maxZoom: 20,
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
         //bounds: this.bounds
      }).addTo(this.map);
+
+     L.control.zoom({
+    position: 'topright'
+      }).addTo(this.map);
         },
+   
+  
 
     equalIntervals: function(low, high, numberOfIntervals){
         let diff = high-low
@@ -222,9 +232,12 @@ export default {
 };
 </script>
 <style>
-  #mapContainer{height:450px;
+  #mapContainer{
+                min-height:500px;
                 z-index: 1;
-                margin-right:20px}
+                height: 100%;
+                position: relative;
+                }
 
   .legend {
 	line-height: 18px;
@@ -238,4 +251,6 @@ export default {
 	margin-right: 8px;
 	opacity: 0.7;
 }
+
+
 </style>

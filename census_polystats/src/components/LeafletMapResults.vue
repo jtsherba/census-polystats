@@ -17,50 +17,136 @@ import { latLngBounds } from "leaflet";
 import * as turf from '@turf/turf'
 export default {
   name: "MapResults",
-  props: {name:Object, resultsData:Object, selectedAttribute:String},
+  props: {name:Object, resultsData:Array, selectedAttribute:String, selectedCensusVariable:String},
   watch: {
+    selectedCensusVariable(val){
+      function  getColor2(n, classBreaks, colorHex) {
+        
+        var mapScale = chroma.scale(colorHex).classes(classBreaks);
+        
+        let regionColor = '#ffffff';
+        if (n === 0) {
+            regionColor = '#ffffff';
+        } else { 
+            regionColor = mapScale(n).hex();
+        }
+      return regionColor
+      }
+      if(this.setFirstCensusVariable == true){
+         
+          this.setFirstCensusVariable = false
+      }else{
+           this.censusVariable = val
+
+           console.log(this.censusVariable)
+      this.allValues = []
+
+      Object.entries(this.resultData).forEach(feature => {
+      
+        if (feature[0] !=="sf"){
+          
+          this.allValues.push(parseFloat(feature[1][this.censusVariable]))
+        }
+      })
+      
+      let max_of_array = Math.max.apply(Math, this.allValues)
+      let min_of_array = Math.min.apply(Math, this.allValues)
+      let classBreaks = this.equalIntervals(min_of_array, max_of_array, 8)
+
+      //let classBreaks = [1,50,100,250,500,1000,2000,3000,6000,9000];
+      let colorHex = ['#deebf7','#08306b'];
+      
+
+        this.resultGeojson.features.forEach(feature => {
+        
+          let feature_id = feature.properties[this.currentAttribute]
+        
+          feature.properties["data_value"] = this.resultData[feature_id][this.censusVariable]
+
+        
+        });
+        this.layerGroup.removeLayer(this.geojsonLayer);
+      
+        
+        this.geojsonLayer = L.geoJSON(this.resultGeojson,{style: function (feature) {
+    
+          return {
+      
+            weight: 1,
+            color: "#ECEFF1",
+            opacity: 1,
+            fillColor: getColor2(feature.properties.data_value,classBreaks, colorHex),
+            fillOpacity: .8
+          }
+    
+      }, onEachFeature:this.onEachFeatureFunction})
+
+       /* let bbox = turf.bbox(this.resultGeojson);
+        let latlngbbox = latLngBounds([
+          [bbox[1], bbox[0]],
+          [bbox[3], bbox[2]]
+        ])
+        this.bounds=latlngbbox*/
+        this.mapResults.fitBounds(this.bounds)
+
+
+        //this.layerGroup = new L.LayerGroup();
+        this.layerGroup.addLayer(this.resultGeojson);
+        this.geojsonLayer.addTo(this.mapResults)
+        if (this.legend != null){
+          this.mapResults.removeControl(this.legend);
+        }
+
+      
+        this.legend = L.control({position: 'topright'});
+        this.legend.onAdd = function () {
+            var div = L.DomUtil.create('div', 'legend');
+            div.innerHTML += '<i style="background: #ffffff;"></i>0';
+            //classBreaks.push(999); // add dummy class to extend to get last class color, chroma only returns class.length - 1 colors
+            for (var i = 0; i < classBreaks.length; i++) {
+                if (i+2 === classBreaks.length) {
+                    div.innerHTML += '<i style="background: ' + getColor2(classBreaks[i], classBreaks, colorHex) + ';"></i> ' +
+                    classBreaks[i] + '+';
+                    break
+                } else {
+                    div.innerHTML += '<i style="background: ' + getColor2(classBreaks[i], classBreaks, colorHex) + ';"></i> ' +
+                    classBreaks[i] + '–' + classBreaks[i+1] + '<br>';
+                }
+            }
+            return div;
+        };
+        this.legend.addTo(this.mapResults);
+        
+        
+      
+      }
+        
+    },
     selectedAttribute(val){
         this.attribute = val
     }, 
-    name(val) {
-      if ("empty" in val){
-        console.log(this.mapResults)
-        
-        this.layerGroup.removeLayer(this.geojsonLayer);
-        
+    resultsData(allResults){
+   
+    this.resultData = allResults[0]
+ 
+    let censusVariablesDetail = this.resultData[Object.keys(this.resultData)[0]]
+   
+    this.censusVariable = Object.keys(censusVariablesDetail)[0]// Object.keys(this.resultData[0])[0]
+    
+    this.resultGeojson = allResults[1]
+    this.currentAttribute = allResults[2]
+    this.allValues = []
 
-        
-      }else{
-      this.loading = true;
-      this.geojson = JSON.parse(JSON.stringify(val));
-      let bbox = turf.bbox(this.geojson);
-      let latlngbbox = latLngBounds([
-        [bbox[1], bbox[0]],
-        [bbox[3], bbox[2]]
-      ])
-      this.bounds=latlngbbox
-      this.mapResults.fitBounds(this.bounds)
-      this.geojsonLayer = L.geoJSON(this.geojson,{style: this.style, onEachFeature:this.onEachFeatureFunction})
-      this.layerGroup = new L.LayerGroup();
-      this.layerGroup.addTo(this.mapResults);
-      this.layerGroup.addLayer(this.geojsonLayer);
-      
-      
-      this.loading = false;
-      }
-    }, 
-    resultsData(val){
+    Object.entries(this.resultData).forEach(feature => {
      
-    console.log(val)
-    let allValues = []
-    Object.entries(val).forEach(feature => {
       if (feature[0] !=="sf"){
-        allValues.push(parseInt(parseFloat(feature[1].sample_data)))
+        
+        this.allValues.push(parseFloat(feature[1][this.censusVariable]))
       }
     })
 
-    let max_of_array = Math.max.apply(Math, allValues)
-    let min_of_array = Math.min.apply(Math, allValues)
+    let max_of_array = Math.max.apply(Math, this.allValues)
+    let min_of_array = Math.min.apply(Math, this.allValues)
     let classBreaks = this.equalIntervals(min_of_array, max_of_array, 8)
 
     //let classBreaks = [1,50,100,250,500,1000,2000,3000,6000,9000];
@@ -78,19 +164,18 @@ export default {
     return regionColor
     }
 
-
-      this.geojson.features.forEach(feature => {
-        
-        let feature_id = feature.properties[this.attribute]
+      this.resultGeojson.features.forEach(feature => {
        
-        feature.properties["data_value"] = val[feature_id].sample_data
+        let feature_id = feature.properties[this.currentAttribute]
+       
+        feature.properties["data_value"] = this.resultData[feature_id][this.censusVariable]
 
       
       });
-      this.layerGroup.removeLayer(this.geojsonLayer);
+      //this.layerGroup.removeLayer(this.geojsonLayer);
      
       
-      this.geojsonLayer = L.geoJSON(this.geojson,{style: function (feature) {
+      this.geojsonLayer = L.geoJSON(this.resultGeojson,{style: function (feature) {
   
         return {
     
@@ -102,11 +187,24 @@ export default {
         }
   
     }, onEachFeature:this.onEachFeatureFunction})
-      this.layerGroup.addLayer(this.geojsonLayer);
+
+      let bbox = turf.bbox(this.resultGeojson);
+      let latlngbbox = latLngBounds([
+        [bbox[1], bbox[0]],
+        [bbox[3], bbox[2]]
+      ])
+      this.bounds=latlngbbox
+      this.mapResults.fitBounds(this.bounds)
+
+
+      this.layerGroup = new L.LayerGroup();
+      this.layerGroup.addLayer(this.resultGeojson);
       this.geojsonLayer.addTo(this.mapResults)
       if (this.legend != null){
         this.mapResults.removeControl(this.legend);
       }
+
+
       this.legend = L.control({position: 'topright'});
       this.legend.onAdd = function () {
           var div = L.DomUtil.create('div', 'legend');
@@ -151,10 +249,16 @@ export default {
       geojsonLayer:null,
       geojson: null,
       attribute:null,
+      resultData:null,
+      censusVariable:null,
+      resultGeojson:null,
+      currentAttribute:null,
+      allValues:[],
       fillColor: "#e4ce7f",
       classBreaks: [1,50,100,250,500,1000,2000,3000,6000,9000],
       colorHex: ['#deebf7','#08306b'],
       url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      setFirstCensusVariable:true,
       attribution:
         '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
      
