@@ -1,6 +1,7 @@
 <template>
-
+  
   <div>
+   
     <div>
       <span v-if="loading">Loading...</span>
       
@@ -16,19 +17,38 @@
 <script>
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import 'leaflet-draw';
 import chroma from "chroma-js";
 import { latLngBounds } from "leaflet";
 import * as turf from '@turf/turf'
 export default {
   name: "Map",
-  props: {name:Object, resultsData:Object, selectedAttribute:String},
+  props: {name:Object, resultsData:Object, selectedAttribute:String, updateStartDraw:Boolean, updateStartDelete:Boolean, sendRemoveDrawPolygon:Boolean, sendRemoveUploadedFile:Boolean},
   watch: {
+    sendRemoveUploadedFile(){
+      console.log("testtesttest")
+      if(this.layerGroup!=null){
+        console.log("test")
+      this.layerGroup.removeLayer(this.geojsonLayer);
+      }
+    },
+    sendRemoveDrawPolygon(){
+      if (this.drawnItems != null) {
+      this.startDelete()
+      }
+    },
+    updateStartDraw(){
+        this.startDraw()
+    },
+    updateStartDelete(){
+        this.startDelete()
+    },
     selectedAttribute(val){
         this.attribute = val
     }, 
     name(val) {
       if ("empty" in val){
-        console.log(this.map)
+     
         
         this.layerGroup.removeLayer(this.geojsonLayer);
         
@@ -135,6 +155,7 @@ export default {
   mounted(){
 
     this.setupLeafletMap();
+    
   },
   data() {
     return {
@@ -150,7 +171,9 @@ export default {
         [25, -124]
       ]),
       map:null,
+      drawControl:null,
       layerGroup: null,
+      drawnItems:null,
       geojsonLayer:null,
       geojson: null,
       attribute:null,
@@ -219,6 +242,36 @@ export default {
         }
 
      return outIntervals
+    }, 
+
+    startDraw:function(){
+          this.drawnItems = new L.FeatureGroup();
+          this.map.addLayer(this.drawnItems);
+      
+          let polygonDrawer = new L.Draw.Polygon(this.map);
+          polygonDrawer.enable();
+          // Assumming you have a Leaflet map accessible
+          //var vm = this
+          this.map.on('draw:created', (e) => {
+             let layer = e.layer;
+
+            // Do whatever you want with the layer.
+            // e.type will be the type of layer that has been draw (polyline, marker, polygon, rectangle, circle)
+            // E.g. add it to the map
+            
+           this.drawnItems.addLayer(layer);
+             // layer.editing.enable()
+           this.drawnItems.addTo(this.map)
+           // layer.addTo(this.map)
+            });
+             
+         
+         
+    },
+    startDelete:function(){
+      var layers = this.drawnItems.getLayers();
+      layers[layers.length - 1].remove();
+  
     }
  },
   async created() {

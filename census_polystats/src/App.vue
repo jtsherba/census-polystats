@@ -183,8 +183,27 @@
                     <v-card-title class="text-h8">
                       Draw Boundary
                     </v-card-title>
-            
-               
+                    <div class="spatialFileInput">
+                   
+                      <v-row>
+                        <v-col cols = "12">
+                     <v-btn
+                        depressed
+                        color="primary"
+                        v-on:click="updateDrawPolygon()"
+                      >
+                        Draw Polygon
+                      </v-btn>
+                      <v-btn
+                        depressed
+                        color="primary"
+                        v-on:click="startDelete = !startDelete"
+                      >
+                        Delete
+                      </v-btn>
+                        </v-col>
+                      </v-row>
+                    </div>  
                 
                   </v-card>  
                    
@@ -226,7 +245,7 @@
               </v-form>
             </v-sheet>
               </div>
-              <LeafletMap :name="geojson" :selectedAttribute="selectedAttribute"
+              <LeafletMap :name="geojson" :selectedAttribute="selectedAttribute" :updateStartDraw="startDraw" :updateStartDelete="startDelete" :sendRemoveDrawPolygon="sendRemoveDrawPolygon" :sendRemoveUploadedFile="sendRemoveUploadedFile"
               > </LeafletMap> 
              
             </v-sheet>
@@ -264,7 +283,7 @@
               </v-dialog>
               <v-row>
                <v-col cols="8" v-if= "showResults">
-                 <LeafletMapResults :resultsData="resultsData" :selectedAttribute="selectedAttribute" :selectedCensusVariable="selectedCensusVariable"> </LeafletMapResults> 
+                 <LeafletMapResults :resultsData="resultsData" :selectedAttribute="selectedAttribute" :selectedCensusVariable="selectedCensusVariable" > </LeafletMapResults> 
 
               </v-col>
               <v-col cols="4" >
@@ -324,7 +343,7 @@
         v => !!v || 'Name is required'
       ],
      rulesUpload: [
-        v => !!v || 'File is required',
+        //v => !!v || 'File is required',
         value => !value || value.size < 2000000000 || 'File size should be less than 2 MB!',
       ],
       links: [
@@ -343,6 +362,8 @@
       attributes:[],
       selectedAttribute:null,
       selectedCensusAttribute: null,
+      startDraw:null,
+      startDelete:null,
       censusAttributes:[],
       selectedCensusGroup: null,
       censusGroups:[],
@@ -363,15 +384,23 @@
       selectedCensusVariable: null, 
       censusVariables: [],
       tableHeaders: [],
-      tableValues: []
+      tableValues: [],
+      sendRemoveDrawPolygon: false, 
+      sendRemoveUploadedFile:false,
     }),
   mounted(){
       //this.populateCensusDropdowns()
   },
   methods:{
+    updateDrawPolygon(){
+      this.chosenFile = null
+         this.sendRemoveDrawPolygon = !this.sendRemoveDrawPolygon
+        this.sendRemoveUploadedFile = !this.sendRemoveUploadedFile
+        this.startDraw = !this.startDraw
+    },
     onAddFiles() {
       //for the shapefiles in the files folder called pandr.shp
-      
+      this.sendRemoveDrawPolygon = !this.sendRemoveDrawPolygon
       if (this.chosenFile == null){
         this.geojson = {"empty":"true"}
         this.attributes = []
@@ -459,7 +488,7 @@
             }
           
       
-           console.log(resultsData)
+      
            
 
         })
