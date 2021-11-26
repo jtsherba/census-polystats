@@ -26,9 +26,9 @@ export default {
   props: {name:Object, resultsData:Object, selectedAttribute:String, updateStartDraw:Boolean, updateStartDelete:Boolean, sendRemoveDrawPolygon:Boolean, sendRemoveUploadedFile:Boolean},
   watch: {
     sendRemoveUploadedFile(){
-      console.log("testtesttest")
+     
       if(this.layerGroup!=null){
-        console.log("test")
+      
       this.layerGroup.removeLayer(this.geojsonLayer);
       }
     },
@@ -64,6 +64,9 @@ export default {
       ])
       this.bounds=latlngbbox
       this.map.fitBounds(this.bounds)
+      let offset = this.map.getSize().x*0.15;
+      // Then move the map
+      this.map.panBy(new L.Point(-offset, 0), {animate: false});
       this.geojsonLayer = L.geoJSON(this.geojson,{style: this.style, onEachFeature:this.onEachFeatureFunction})
       this.layerGroup = new L.LayerGroup();
       this.layerGroup.addTo(this.map);
@@ -174,6 +177,7 @@ export default {
       drawControl:null,
       layerGroup: null,
       drawnItems:null,
+      drawnItemGeojson:null, 
       geojsonLayer:null,
       geojson: null,
       attribute:null,
@@ -228,6 +232,10 @@ export default {
      L.control.zoom({
     position: 'topright'
       }).addTo(this.map);
+
+      let offset = this.map.getSize().x*0.15;
+      // Then move the map
+      this.map.panBy(new L.Point(-offset, 0), {animate: false});
         },
    
   
@@ -262,7 +270,11 @@ export default {
            this.drawnItems.addLayer(layer);
              // layer.editing.enable()
            this.drawnItems.addTo(this.map)
-           // layer.addTo(this.map)
+           this.drawnItemGeojson = this.drawnItems.toGeoJSON()
+           this.$emit('drawnItemGeojsonCreated', this.drawnItemGeojson)
+          
+              
+              //console.log(this.drawnItemGeojson)
             });
              
          
@@ -286,9 +298,10 @@ export default {
 </script>
 <style>
   #mapContainer{
-                min-height:500px;
+              
                 z-index: 1;
-                height: 100%;
+              
+              height: calc(100vh - 136px) !important;
                 position: relative;
                 }
 
@@ -305,5 +318,8 @@ export default {
 	opacity: 0.7;
 }
 
+.v-main{
+  padding-top: 56px !important;
+}
 
 </style>

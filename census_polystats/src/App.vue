@@ -4,6 +4,7 @@
       app
       color="white"
       flat
+      height="64"
       
     >
        <v-container class="py-0 fill-height">
@@ -13,13 +14,7 @@
           size="32"
         ></v-avatar>
 
-        <v-btn
-          v-for="link in links"
-          :key="link"
-          text
-        >
-          {{ link }}
-        </v-btn>
+       <v-toolbar-title>Census Polystats</v-toolbar-title>
         
 
         <v-spacer></v-spacer>
@@ -27,20 +22,24 @@
         
       </v-container>
       <v-spacer></v-spacer>
+       <v-btn
+          depressed
+          class="ma-2"
+          outlined
+          color="indigo"
+          v-on:click="setAboutTab()"
+        >
+          About
+        </v-btn>
        <v-tabs
           v-model="tab"
-          
+          color="deep-purple accent-4"
+           :class="{visible: tabsVisible}"
            right
         >
-          <v-tabs-slider color="yellow"></v-tabs-slider>
+          <v-tabs-slider ></v-tabs-slider>
 
-        <!--  <v-tab
-            v-for="item in items"
-            :key="item"
-            
-          >
-            {{ item }}
-          </v-tab>-->
+      
 
           <v-tab
            
@@ -50,22 +49,25 @@
             {{ "analysis" }}
           </v-tab>
           <v-tab
+       
             v-show="showResultsTab"
             :key="results"
             
           >
             {{ "results" }}
           </v-tab>
+          
     </v-tabs>
     </v-app-bar>
-      <v-card
+
+  <v-card
     color="grey lighten-4"
     flat
-    height="50px"
     tile
     class="toolBarCard"
+   
   >
-    <v-toolbar color="grey lighten-4">
+    <v-toolbar  height="80" color="grey lighten-4">
       
 
       <v-toolbar-title>Title</v-toolbar-title>
@@ -75,17 +77,31 @@
 
       <v-spacer></v-spacer>
 
-      <v-btn icon>
-        <v-icon>mdi-magnify</v-icon>
+      <v-btn
+        class="ma-2"
+        outlined
+        :loading="loading"
+        :disabled="loading"
+        color="secondary"
+        @click="resetAll()"
+      >
+        Reset
       </v-btn>
+      <v-btn
+        class="ma-2"
+        outlined
+        color="indigo"
+        :loading="loading"
+        :disabled="runButtonDisabled"
+      
+        @click="runSummary"
+      >
+        Get Data
+      </v-btn>
+                         
+               
 
-      <v-btn icon>
-        <v-icon>mdi-heart</v-icon>
-      </v-btn>
-
-      <v-btn icon>
-        <v-icon>mdi-dots-vertical</v-icon>
-      </v-btn>
+     
     </v-toolbar>
   </v-card>
 
@@ -127,17 +143,19 @@
             <v-sheet
               min-height="70vh"
               rounded="lg"
-              height="100%"
+              
             >
               <div class="overlay">
-                       <v-sheet rounded="lg">
+              <v-sheet rounded="lg" height="100%" style="padding-bottom: 18px; background:rgba(63, 81, 181,0.5);">
               <v-form
                 ref="form"
                 v-model="valid"
                 lazy-validation
+                height="100%"
               >
              
                   <v-card
+                  height="100%"
                     outline
                     class="toolInset"
                   >
@@ -189,15 +207,19 @@
                         <v-col cols = "12">
                      <v-btn
                         depressed
-                        color="primary"
+                        class="ma-2"
+                        outlined
+                        color="indigo"
                         v-on:click="updateDrawPolygon()"
                       >
                         Draw Polygon
                       </v-btn>
                       <v-btn
                         depressed
-                        color="primary"
-                        v-on:click="startDelete = !startDelete"
+                        class="ma-2"
+                        outlined
+                        color="secondary"
+                        v-on:click="deleteDrawPolygon()"
                       >
                         Delete
                       </v-btn>
@@ -207,45 +229,10 @@
                 
                   </v-card>  
                    
-                 
-                
-               
-               
-
-                <v-divider class="my-2"></v-divider>
-                  <v-list color="transparent">
-                <v-list-item
-                  link
-                  color="grey lighten-4"
-                >
-                  <v-list-item-content>
-                      <div class="text-center">
-                        <v-btn
-                          class="ma-2"
-                          :loading="loading"
-                          :disabled="loading"
-                          color="secondary"
-                          @click="runSummary"
-                        >
-                          Get Data
-                        </v-btn>
-                         <v-btn
-                          class="ma-2"
-                          :loading="loading"
-                          :disabled="loading"
-                          color="secondary"
-                          @click="loader = 'loading'"
-                        >
-                          Reset
-                        </v-btn>
-                       </div>
-                  </v-list-item-content>
-                </v-list-item>
-              </v-list>
               </v-form>
             </v-sheet>
               </div>
-              <LeafletMap :name="geojson" :selectedAttribute="selectedAttribute" :updateStartDraw="startDraw" :updateStartDelete="startDelete" :sendRemoveDrawPolygon="sendRemoveDrawPolygon" :sendRemoveUploadedFile="sendRemoveUploadedFile"
+              <LeafletMap @drawnItemGeojsonCreated="drawnItemGeojsonCreated" :name="geojson" :selectedAttribute="selectedAttribute" :updateStartDraw="startDraw" :updateStartDelete="startDelete" :sendRemoveDrawPolygon="sendRemoveDrawPolygon" :sendRemoveUploadedFile="sendRemoveUploadedFile"
               > </LeafletMap> 
              
             </v-sheet>
@@ -319,6 +306,7 @@
                 ></v-data-table>
               </v-row>
           </v-tab-item> 
+         
         </v-tabs-items>
         
      
@@ -351,6 +339,7 @@
         'Updates',
       ],
       geojson:null,
+      drawnItemGeojson:null,
       geojsonResults:null,
       chosenFile: null,
       msg:null,
@@ -387,13 +376,33 @@
       tableValues: [],
       sendRemoveDrawPolygon: false, 
       sendRemoveUploadedFile:false,
+      runButtonDisabled:true, 
+      tabsVisible:true,
     }),
   mounted(){
       //this.populateCensusDropdowns()
   },
   methods:{
+   
+    resetAll(){
+      this.runButtonDisabled = true
+       this.sendRemoveDrawPolygon = !this.sendRemoveDrawPolygon
+        this.sendRemoveUploadedFile = !this.sendRemoveUploadedFile
+        this.geojson = {"empty":"true"}
+        this.chosenFile = null
+        this.attributes = []
+    },
+    drawnItemGeojsonCreated(value) {
+      this.drawnItemGeojson = value // someValue
+      this.runButtonDisabled = false
+    },
+    deleteDrawPolygon(){
+      this.startDelete = !this.startDelete
+      this.runButtonDisabled = true
+    },
     updateDrawPolygon(){
       this.chosenFile = null
+      this.attributes = []
          this.sendRemoveDrawPolygon = !this.sendRemoveDrawPolygon
         this.sendRemoveUploadedFile = !this.sendRemoveUploadedFile
         this.startDraw = !this.startDraw
@@ -403,6 +412,7 @@
       this.sendRemoveDrawPolygon = !this.sendRemoveDrawPolygon
       if (this.chosenFile == null){
         this.geojson = {"empty":"true"}
+        this.runButtonDisabled = true
         this.attributes = []
         return
       }else if(this.chosenFile.name.endsWith(".geojson")){
@@ -430,6 +440,7 @@
             });
           }
       }
+      this.runButtonDisabled = false
      },
     updateAttributeSelection(){
        this.attributes = Object.keys(this.geojson.features[0].properties)
@@ -437,27 +448,26 @@
     }, 
 
     runSummary(){
-
-      
-      if (this.$refs.form.validate() === true){
-        console.log(this.valid)
-      this.loading = true
+      if(this.drawnItemGeojson != null){
+        this.drawnItemGeojson.features[0].properties['id'] = "1"
+          this.loading = true
       this.dialog = true
       this.tab = 1
            this.showResultsTab =true
-           this.geojsonResults = this.geojson
-      let bbox = turf.bbox(this.geojson);
-      
+           this.geojsonResults = this.drawnItemGeojson
+      let bbox = turf.bbox(this.drawnItemGeojson);
+      this.selectedAttribute = "id"
       const path = 'http://localhost:5000/basicAnalysis';
-      let payload = {"layer": this.geojson, "bbox":bbox, "summary_attribute": this.selectedAttribute}
+      let payload = {"layer": this.drawnItemGeojson, "bbox":bbox, "summary_attribute": this.selectedAttribute}
       console.log(payload)
       axios.post(path, payload)
         .then((res) => {
            //this.tab = 1
            //this.showResultsTab =true
-           this.geojsonResults = this.geojson
+           //this.geojsonResults = this.geojson
+           console.log(res)
            let resultsData = res.data.data
-           this.resultsData = [resultsData,this.geojson, this.selectedAttribute]
+           this.resultsData = [resultsData, this.drawnItemGeojson, this.selectedAttribute]
            this.censusVariables = Object.keys(resultsData[Object.keys(resultsData)[0]])
            this.selectedCensusVariable = this.censusVariables[0]
            this.loading = false
@@ -497,8 +507,72 @@
           console.log(error);
          
         });
+
+      }else{
+      
+      if (this.$refs.form.validate() === true){
+        console.log(this.geojson)
+        console.log(this.drawnItemGeojson)
+      this.loading = true
+      this.dialog = true
+      this.tab = 1
+           this.showResultsTab =true
+           this.geojsonResults = this.geojson
+      let bbox = turf.bbox(this.geojson);
+      
+      const path = 'http://localhost:5000/basicAnalysis';
+      let payload = {"layer": this.geojson, "bbox":bbox, "summary_attribute": this.selectedAttribute}
+      console.log(payload)
+      axios.post(path, payload)
+        .then((res) => {
+           //this.tab = 1
+           //this.showResultsTab =true
+           this.geojsonResults = this.geojson
+           let resultsData = res.data.data
+           this.resultsData = [resultsData,this.geojson, this.selectedAttribute]
+           this.censusVariables = Object.keys(resultsData[Object.keys(resultsData)[0]])
+           this.selectedCensusVariable = this.censusVariables[0]
+           this.loading = false
+           this.dialog = false
+           this.tabsVisible = false
+             this.tableHeaders =  [
+          {
+            text: 'Census Variable Name',
+            align: 'start',
+            sortable: false,
+            value: 'name',
+          },
+           { text: 'Census Variable Category', value: 'category' },
+          { text: 'Census Value', value: 'value' },
+          { text: 'Summary Attribute', value: 'summary_attribute' },
+          
+           ]
+
+            for (const [key, value] of Object.entries(resultsData)) {
+              for (const [subkey, subvalue] of Object.entries(value)) {
+                  let tableValue = {
+                    name: subkey,
+                    category:"None",
+                    value: subvalue,
+                    summary_attribute:key
+                  }
+                  this.tableValues.push(tableValue)
+              }
+            }
+          
+      
+      
+           
+
+        })
+        .catch((error) => {
+          // eslint-disable-next-line
+          console.log(error);
+         
+        });
       }else{
          this.snackbar = true
+      }
       }
          }, 
 
@@ -508,7 +582,7 @@
 </script>
 <style>
 .overlay {
-  height: 100px;
+  
   width: 400px;
   margin-right: -500px;
   padding-left:10px;
@@ -527,11 +601,19 @@
   height: 100%;
 }
 .toolBarCard{
-  padding-top:50px;
+ 
+  position: sticky;
+  position: -webkit-sticky; /* for Safari */
+  top: 56px;
+  z-index: 2;
+
 }
 
 .toolInset{
-  margin:10px;
-  top:10px;
+  margin:5px;
+  top:5px;
+}
+.visible{
+  display:none
 }
 </style>
