@@ -31,33 +31,7 @@
         >
           About
         </v-btn>
-       <v-tabs
-          v-model="tab"
-          color="deep-purple accent-4"
-           :class="{visible: tabsVisible}"
-           right
-        >
-          <v-tabs-slider ></v-tabs-slider>
-
       
-
-          <v-tab
-           
-            :key="analysis"
-            
-          >
-            {{ "analysis" }}
-          </v-tab>
-          <v-tab
-       
-            v-show="showResultsTab"
-            :key="results"
-            
-          >
-            {{ "results" }}
-          </v-tab>
-          
-    </v-tabs>
     </v-app-bar>
 
   <v-card
@@ -68,39 +42,38 @@
    
   >
     <v-toolbar  height="80" color="grey lighten-4">
+        <v-tabs
+          v-model="tab"
+          color="deep-purple accent-4"
+           :class="{visible: tabsVisible}"
+           left
+        >
+          <v-tabs-slider ></v-tabs-slider>
+
       
 
-      <v-toolbar-title>Title</v-toolbar-title>
-
-     
-
-
+          <v-tab
+           
+            :key="analysis"
+            href='#tab-1'
+          >
+            {{ "Run Analysis" }}
+          </v-tab>
+          <v-tab
+       
+            v-show="showResultsTab"
+            :key="results"
+            href='#tab-2'
+          >
+            {{ "results" }}
+          </v-tab>
+          
+    </v-tabs>
+    
       <v-spacer></v-spacer>
 
-      <v-btn
-        class="ma-2"
-        outlined
-        :loading="loading"
-        :disabled="loading"
-        color="secondary"
-        @click="resetAll()"
-      >
-        Reset
-      </v-btn>
-      <v-btn
-        class="ma-2"
-        outlined
-        color="indigo"
-        :loading="loading"
-        :disabled="runButtonDisabled"
-      
-        @click="runSummary"
-      >
-        Get Data
-      </v-btn>
-                         
-               
-
+       <v-btn v-if="analysisRun" @click="changeTab()">{{ changeTabText }}</v-btn>          
+     
      
     </v-toolbar>
   </v-card>
@@ -133,7 +106,7 @@
        
 
   <v-tabs-items v-model="tab" class="v-tab-item-class">
-      <v-tab-item :key="analysis">
+      <v-tab-item :key="analysis" value='tab-1'>
         <v-row height="100%">
          <!-- <v-col cols="6">
            
@@ -146,22 +119,55 @@
               
             >
               <div class="overlay">
-              <v-sheet rounded="lg" height="100%" style="padding-bottom: 18px; background:rgba(63, 81, 181,0.5);">
+              <v-sheet rounded="lg" height="100%" style="padding-bottom: 18px; background:rgba(63, 81, 181,0);">
               <v-form
                 ref="form"
                 v-model="valid"
                 lazy-validation
                 height="100%"
               >
-             
+            
                   <v-card
-                  height="100%"
+                   height="100%"
                     outline
                     class="toolInset"
                   >
-                    <v-card-title class="text-h8">
-                      Load Boundary File
+                  <v-card-title class="text-h8">
+                      Set Analysis Area
                     </v-card-title>
+                    <div class="spatialFileInput">
+                   
+                      <v-row>
+                        <v-col cols = "12">
+                     <v-btn
+                        depressed
+                        class="ma-2"
+                        outlined
+                        color="indigo"
+                        v-on:click="updateDrawPolygon()"
+                      >
+                        Draw Polygon
+                      </v-btn>
+                      <v-btn
+                        depressed
+                        class="ma-2"
+                        outlined
+                        color="secondary"
+                        v-on:click="deleteDrawPolygon()"
+                      >
+                        Delete
+                      </v-btn>
+                        </v-col>
+                      </v-row>
+                    </div>  
+                  <v-expansion-panels
+                    flat
+                    class="loadFileExpansion"
+                  >
+                  <v-expansion-panel>
+                  <v-expansion-panel-header>Or load a file</v-expansion-panel-header>
+                  <v-expansion-panel-content>
+                    
 
                     <!--<v-card-subtitle>Listen to your favorite artists and albums whenever and wherever, online and offline.</v-card-subtitle>-->
                     <div class="spatialFileInput">
@@ -197,40 +203,117 @@
                       </v-row>
                    
                   </div>
+                  </v-expansion-panel-content>
+                </v-expansion-panel>
+                  </v-expansion-panels>
+                  
                           
-                    <v-card-title class="text-h8">
-                      Draw Boundary
-                    </v-card-title>
-                    <div class="spatialFileInput">
+                    <v-divider class="runControlDivider"></v-divider>
                    
-                      <v-row>
-                        <v-col cols = "12">
-                     <v-btn
-                        depressed
-                        class="ma-2"
-                        outlined
-                        color="indigo"
-                        v-on:click="updateDrawPolygon()"
-                      >
-                        Draw Polygon
-                      </v-btn>
-                      <v-btn
-                        depressed
-                        class="ma-2"
-                        outlined
-                        color="secondary"
-                        v-on:click="deleteDrawPolygon()"
-                      >
-                        Delete
-                      </v-btn>
-                        </v-col>
-                      </v-row>
-                    </div>  
+  
+
+                    <v-btn
+                      text
+                      color="primary"
+                      right 
+                      small
+                      @click="expandOptions"
+                    >
+                    Advanced Options
+                   <v-icon
+                    right
+                   
+                  >
+                  mdi-chevron-right
+                  </v-icon>
+                   </v-btn>
+                <div class="runButtons">
+                  
+                  <v-btn
+                 class="ma-1"
+                    outlined
+                  color="indigo"
+                  :loading="loading"
+                  :disabled="runButtonDisabled"
+                  right
+                  @click="runSummary"
+                >
+                  Run
+                </v-btn>
+                 <v-btn
+                  class="ma-2"
+                  outlined
+                  :loading="loading"
+                  :disabled="loading"
+                  color="secondary"
+                  @click="resetAll()"
+                  right
+                >
+                  Reset
+                </v-btn>
                 
+                </div>
+              
                   </v-card>  
-                   
+                 
+               
               </v-form>
             </v-sheet>
+              </div>
+
+              <div class="overlay2" v-if="showAdvancedOptions">
+              <v-sheet rounded="lg" height="100%" style="padding-bottom: 18px; background:rgba(63, 81, 181,0);">
+                    <v-card
+                    height="100%"
+                    outline
+                   class="toolInset" 
+                  >
+                  <div class="runOptions">
+                    <v-row>
+                      
+                    <v-select
+                        class="optionsSelect ma-1"
+                        dense
+                        v-model= "selectedCensusStatistics"
+                        :items="censusStatistics"
+                        label="Census Statistics"
+                        outlined
+                        v-on:change="changeCensusType"
+                      ></v-select>
+                    <v-file-input
+                    class="loadCustom ma-1"
+                    v-if="showCensusStatisticsFileInput"
+                    accept="*.json"
+                    label="File input"
+                    ></v-file-input>
+                    <v-select
+                        class="optionsSelect ma-1"
+                        dense
+                        v-model= "selectedSummaryMethod"
+                        :items="summaryMethod"
+                        label="Summary Method"
+                        outlined
+                      ></v-select>
+                      <v-switch
+                        class="ma-1"
+                        v-model="switch1"
+                        label="Inlcude unsummarized layer"
+                      ></v-switch>
+                      <v-select
+                      class="ma-1"
+                      dense
+                        v-model= "selectedYears"
+                        :items="years"
+                        label="Years"
+                        multiple
+                        outlined
+                      ></v-select>
+                      </v-row>
+
+
+                </div>
+                  </v-card>  
+               </v-sheet>
               </div>
               <LeafletMap @drawnItemGeojsonCreated="drawnItemGeojsonCreated" :name="geojson" :selectedAttribute="selectedAttribute" :updateStartDraw="startDraw" :updateStartDelete="startDelete" :sendRemoveDrawPolygon="sendRemoveDrawPolygon" :sendRemoveUploadedFile="sendRemoveUploadedFile"
               > </LeafletMap> 
@@ -240,7 +323,7 @@
          
         </v-row>
          </v-tab-item>
-          <v-tab-item :key="results">
+          <v-tab-item :key="results" value="tab-2">
               <v-dialog
                   v-model="dialog"
                   width="500"
@@ -378,12 +461,45 @@
       sendRemoveUploadedFile:false,
       runButtonDisabled:true, 
       tabsVisible:true,
+      changeTabText:"Back to Analysis",
+      analysisRun:false,
+      summaryMethod: ["Apportion by Area", "Contains", "Fully Contains"],
+      selectedSummaryMethod: "Apportion by Area",
+      censusStatistics: ["Basic Socio-economic Profile", "Load Custom"],
+      selectedCensusStatistics: "Basic Socio-economic Profile",
+      showCensusStatisticsFileInput:false,
+      selectedYears: ["2019"],
+      years:["2015", "2016", "2017", "2018", "2019"],
+      showAdvancedOptions:false,
+
+      
     }),
   mounted(){
       //this.populateCensusDropdowns()
   },
   methods:{
-   
+    expandOptions(){
+        this.showAdvancedOptions = !this.showAdvancedOptions
+    },
+    changeCensusType(){
+        console.log(this.selectedCensusStatistics)
+        if (this.selectedCensusStatistics == "Load Custom"){
+            this.showCensusStatisticsFileInput=true
+        }else{
+          this.showCensusStatisticsFileInput=false
+        }
+    },
+    changeTab(){
+    if (this.tab == "tab-1"){
+        this.changeTabText = "Back to Analysis"
+        this.tab="tab-2"
+    }else{
+     this.changeTabText = "Back to Results"
+     this.tab='tab-1'
+
+    }
+     
+    },
     resetAll(){
       this.runButtonDisabled = true
        this.sendRemoveDrawPolygon = !this.sendRemoveDrawPolygon
@@ -452,7 +568,7 @@
         this.drawnItemGeojson.features[0].properties['id'] = "1"
           this.loading = true
       this.dialog = true
-      this.tab = 1
+      this.tab = "tab-2"
            this.showResultsTab =true
            this.geojsonResults = this.drawnItemGeojson
       let bbox = turf.bbox(this.drawnItemGeojson);
@@ -465,13 +581,14 @@
            //this.tab = 1
            //this.showResultsTab =true
            //this.geojsonResults = this.geojson
-           console.log(res)
+        
            let resultsData = res.data.data
            this.resultsData = [resultsData, this.drawnItemGeojson, this.selectedAttribute]
            this.censusVariables = Object.keys(resultsData[Object.keys(resultsData)[0]])
            this.selectedCensusVariable = this.censusVariables[0]
            this.loading = false
            this.dialog = false
+           this.analysisRun=true
              this.tableHeaders =  [
           {
             text: 'Census Variable Name',
@@ -515,7 +632,7 @@
         console.log(this.drawnItemGeojson)
       this.loading = true
       this.dialog = true
-      this.tab = 1
+      this.tab = "tab-2"
            this.showResultsTab =true
            this.geojsonResults = this.geojson
       let bbox = turf.bbox(this.geojson);
@@ -534,7 +651,7 @@
            this.selectedCensusVariable = this.censusVariables[0]
            this.loading = false
            this.dialog = false
-           this.tabsVisible = false
+            this.analysisRun=true
              this.tableHeaders =  [
           {
             text: 'Census Variable Name',
@@ -582,15 +699,26 @@
 </script>
 <style>
 .overlay {
-  
-  width: 400px;
-  margin-right: -500px;
+  width: 350px;
+  margin-right: -350px;
   padding-left:10px;
   padding-top:10px;
   position: relative;
   float: left;
   z-index: 2;
   pointer-events: auto;
+
+}
+.overlay2 {
+ width: 500px;
+margin-right: -850px;
+margin-left: 340px;
+padding-left: 10px;
+padding-top: 10px;
+position: relative;
+float: left;
+z-index: 2;
+pointer-events: auto;
 
 }
 .spatialFileInput{
@@ -608,12 +736,38 @@
   z-index: 2;
 
 }
-
+.runButtons{
+  padding-top:10px;
+  padding-left: 15px;
+    padding-right: 15px;
+}
 .toolInset{
   margin:5px;
   top:5px;
+  border: 1px solid rgba(63, 81, 181, .5) !important;
+  padding-bottom: 15px;
 }
 .visible{
   display:none
+}
+.runOptions{
+  padding-top:35px;
+}
+.optionsSelect{
+  width:290px;
+  margin-left:10px;
+  margin-right:10px;
+}
+.loadCustom {
+  width:150px;
+}
+.runControlDivider{
+  padding-top:20px;
+}
+.loadFileExpansion{
+    padding-bottom:20px;
+}
+.advancedOptions{
+ width:200px;
 }
 </style>
